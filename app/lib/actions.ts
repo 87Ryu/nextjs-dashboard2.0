@@ -14,9 +14,7 @@ const FormSchema = z.object({
     customerId: z.string({
       invalid_type_error: 'Please select a customer.',
     }),
-    amount: z.coerce
-      .number()
-      .gt(0, { message: 'Please enter an amount greater than $0.'}),
+    amount: z.coerce.number().gt(0, { message: 'Please enter an amount greater than $0.'}),
     status: z.enum(['pending', 'paid'], {
       invalid_type_error: 'Please select an invoice status.',
     }), 
@@ -62,7 +60,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
     `;
   } catch (error) {
     // If a database error occurs, return a more specific error.
-    console.error('Create Invoice Error:', error);
     return {
       message: 'Database Error: Failed to Create Invoice.',
     };
