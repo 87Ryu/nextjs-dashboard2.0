@@ -16,18 +16,16 @@ async function seedUsers() {
     );
   `;
 
-  const insertedUsers = await Promise.all(
+  await Promise.all(
     users.map(async (user) => {
       const hashedPassword = await bcrypt.hash(user.password, 10);
-      return sql`
+      await sql`
         INSERT INTO users (id, name, email, password)
         VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})
         ON CONFLICT (id) DO NOTHING;
       `;
     }),
   );
-
-  return insertedUsers;
 }
 
 async function seedInvoices() {
@@ -43,7 +41,7 @@ async function seedInvoices() {
     );
   `;
 
-  const insertedInvoices = await Promise.all(
+  await Promise.all(
     invoices.map(
       (invoice) => sql`
         INSERT INTO invoices (customer_id, amount, status, date)
@@ -52,8 +50,6 @@ async function seedInvoices() {
       `,
     ),
   );
-
-  return insertedInvoices;
 }
 
 async function seedCustomers() {
@@ -68,7 +64,7 @@ async function seedCustomers() {
     );
   `;
 
-  const insertedCustomers = await Promise.all(
+  await Promise.all(
     customers.map(
       (customer) => sql`
         INSERT INTO customers (id, name, email, image_url)
@@ -77,8 +73,6 @@ async function seedCustomers() {
       `,
     ),
   );
-
-  return insertedCustomers;
 }
 
 async function seedRevenue() {
@@ -89,7 +83,7 @@ async function seedRevenue() {
     );
   `;
 
-  const insertedRevenue = await Promise.all(
+  await Promise.all(
     revenue.map(
       (rev) => sql`
         INSERT INTO revenue (month, revenue)
@@ -98,21 +92,23 @@ async function seedRevenue() {
       `,
     ),
   );
-
-  return insertedRevenue;
 }
 
 export async function GET() {
   try {
-    const result = await sql.begin((sql) => [
-      seedUsers(),
-      seedCustomers(),
-      seedInvoices(),
-      seedRevenue(),
-    ]);
+    // You don't need to store the result if you aren't using it
+    await sql.begin(() =>
+      Promise.all([
+        seedUsers(),
+        seedCustomers(),
+        seedInvoices(),
+        seedRevenue(),
+      ])
+    );
 
     return Response.json({ message: 'Database seeded successfully' });
   } catch (error) {
-    return Response.json({ error }, { status: 500 });
+    console.error('Seeding error:', error); // Optional: Log for debugging
+    return Response.json({ error: 'Database seeding failed' }, { status: 500 });
   }
 }
